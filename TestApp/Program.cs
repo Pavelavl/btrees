@@ -1,4 +1,5 @@
-﻿using BTrees;
+﻿using BTree;
+using BTrees;
 
 namespace TestApp;
 
@@ -111,7 +112,7 @@ class Program
         Random random = new Random();
         for (int i = 0; i < numElements; i++)
         {
-            int value = random.Next(0, 100);
+            int value = random.Next(0, 100000000);
             currentTree.Insert(value);
         }
         Console.WriteLine("Tree was generated with " + numElements + " elements.");

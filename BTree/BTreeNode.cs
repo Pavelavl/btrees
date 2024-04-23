@@ -5,48 +5,53 @@ namespace BTrees;
 public class BTreeNode<T> where T : IComparable<T>
 {
     public int Degree { get; set; }
-    public bool IsLeaf { get; set; }
+    public virtual bool IsLeaf => Children.Count == 0;
     public List<T> Keys { get; set; }
     public List<BTreeNode<T>> Children { get; set; }
-    
-    public bool IsFull => Keys.Count == 2 * Degree - 1;
-    
-    public int Depth { 
-        get 
-        { 
-            if (IsLeaf) 
+
+    public BTreeNode<T>? Parent { get; set; }
+
+    public virtual bool IsFull => Keys.Count == 2 * Degree - 1 && Keys.Count > MinKeys;
+
+    public virtual int MinKeys => (int)Math.Ceiling(Degree * 1.0 / 2.0);
+
+    public int Depth
+    {
+        get
+        {
+            if (IsLeaf)
             {
-                return 0; 
-            } 
-            else 
+                return 0;
+            }
+            else
             {
-                return Children[0].Depth + 1; 
-            } 
-        } 
+                return Children[0].Depth + 1;
+            }
+        }
     }
 
     public BTreeNode(int degree, bool isLeaf)
     {
         Degree = degree;
-        IsLeaf = isLeaf;
         Keys = new List<T>(degree);
         Children = new List<BTreeNode<T>>(degree + 1);
+        Parent = null;
     }
 
     public BTreeNode<T> Search(T key)
     {
         int i = 0;
-        while (i < Keys.Count && key.CompareTo(Keys[i]) > 0) 
+        while (i < Keys.Count && key.CompareTo(Keys[i]) > 0)
             i++;
 
         if (i < Keys.Count && key.CompareTo(Keys[i]) == 0)
             return this;
 
         if (IsLeaf)
-            return null; 
+            return null;
 
-        return Children[i].Search(key); 
-    } 
+        return Children[i].Search(key);
+    }
 
     public void InsertNonFull(T key)
     {
@@ -59,11 +64,13 @@ public class BTreeNode<T> where T : IComparable<T>
                 {
                     Keys[i + 1] = Keys[i];
                 }
+
                 i--;
             }
+
             Keys.Insert(i + 1, key);
         }
-        else 
+        else
         {
             while (i >= 0 && Keys[i].CompareTo(key) > 0)
                 i--;
@@ -93,6 +100,13 @@ public class BTreeNode<T> where T : IComparable<T>
 
                 // 4. Add the right sibling to the parent node and adjust keys
                 // This step depends on your BTree structure and insertion logic
+                if (Parent != null) // Check if Parent exists
+                {
+                    int parentIndex = Parent.Children.IndexOf(this);
+                    Parent.Children.Insert(parentIndex + 1, rightSibling);
+                    Parent.Keys.Insert(parentIndex, Keys[mid - 1]);
+                    rightSibling.Parent = Parent; // Set Parent for rightSibling
+                }
             }
             else
             {
@@ -102,6 +116,7 @@ public class BTreeNode<T> where T : IComparable<T>
                     if (Keys[i + 1].CompareTo(key) < 0)
                         i++;
                 }
+
                 if (i + 1 < Children.Count)
                 {
                     Children[i + 1].InsertNonFull(key);
@@ -126,6 +141,7 @@ public class BTreeNode<T> where T : IComparable<T>
                     {
                         Keys.Insert(mid, Keys[mid - 1]);
                     }
+
                     Keys.RemoveAt(mid - 1);
 
                     // Insert the key into the appropriate child (either current or new sibling)
@@ -140,34 +156,36 @@ public class BTreeNode<T> where T : IComparable<T>
                 }
             }
         }
-    } 
+    }
 
     public void SplitChild(int i, BTreeNode<T> y)
     {
         var z = new BTreeNode<T>(y.Degree, y.IsLeaf);
 
         // Use correct index for splitting keys
-        z.Keys.AddRange(y.Keys.GetRange(Degree, y.Keys.Count - Degree)); 
+        z.Keys.AddRange(y.Keys.GetRange(Degree, y.Keys.Count - Degree));
 
         if (!y.IsLeaf)
         {
             // Use correct count for splitting children
-            z.Children.AddRange(y.Children.GetRange(Degree + 1, y.Children.Count - Degree - 1)); 
+            z.Children.AddRange(y.Children.GetRange(Degree + 1, y.Children.Count - Degree - 1));
         }
 
         // Use correct index and count for removal
-        y.Keys.RemoveRange(Degree, y.Keys.Count - Degree); 
+        y.Keys.RemoveRange(Degree, y.Keys.Count - Degree);
 
         if (!y.IsLeaf)
         {
             // Only remove children for non-leaf nodes
-            y.Children.RemoveRange(Degree + 1, y.Children.Count - Degree - 1); 
+            y.Children.RemoveRange(Degree + 1, y.Children.Count - Degree - 1);
         }
 
         // Remainder of the code remains unchanged
         Children.Insert(i + 1, z);
         Keys.Insert(i, y.Keys[Degree - 1]);
         y.Keys.RemoveAt(Degree - 1);
+
+        z.Parent = this; // Set Parent for the new child node
     }
 
     public override string ToString()
@@ -179,26 +197,45 @@ public class BTreeNode<T> where T : IComparable<T>
 
     private void ToStringHelper(BTreeNode<T>? node, StringBuilder? result, string prefix, string childrenPrefix)
     {
-        if (node == null) 
+        if (node == null)
             return;
 
         result?.Append($"{prefix}[");
         for (int i = 0; i < node.Keys.Count; i++)
         {
             result?.Append(node.Keys[i]);
-            if (i < node.Keys.Count - 1) 
+            if (i < node.Keys.Count - 1)
                 result?.Append(", ");
         }
+
         result?.AppendLine("]");
 
         if (!node.IsLeaf)
         {
             for (int i = 0; i < node.Children.Count; i++)
             {
-                ToStringHelper(node.Children[i], result, 
+                ToStringHelper(node.Children[i], result,
                     $"{childrenPrefix}{(i == node.Children.Count - 1 ? "└─ " : "├─ ")}",
                     $"{childrenPrefix}{(i == node.Children.Count - 1 ? "   " : "│  ")}");
             }
         }
+    }
+
+    public int GetIndexInParent()
+    {
+        // Assuming the parent node maintains a reference to its children and their count
+        if (Parent != null && Parent.Children.Count > 0)
+        {
+            for (int i = 0; i < Parent.Children.Count; i++)
+            {
+                if (Parent.Children[i] == this)
+                {
+                    return i;
+                }
+            }
+        }
+
+        // Return -1 if the node is not part of a parent's children array
+        return -1;
     }
 }

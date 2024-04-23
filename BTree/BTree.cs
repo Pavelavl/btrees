@@ -5,6 +5,8 @@ public class BTree<T> where T : IComparable<T>
     public BTreeNode<T> Root { get; set; }
     public int Degree { get; set; }
 
+    public virtual int MinKeys => (int)Math.Ceiling(Degree * 1.0 / 2.0);
+
     public BTree(int degree)
     {
         Root = null;
@@ -40,7 +42,7 @@ public class BTree<T> where T : IComparable<T>
         }
     }
 
-    public BTreeNode<T> Search(T key)
+    public virtual BTreeNode<T> Search(T key)
     {
         if (Root == null)
             return null;
@@ -48,7 +50,7 @@ public class BTree<T> where T : IComparable<T>
     }
 
     // Simplified deletion (only from leaves and without merging/redistribution)
-    public void Delete(T key)
+    public virtual void Delete(T key)
     {
         if (Root == null)
             return;
