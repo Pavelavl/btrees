@@ -5,7 +5,7 @@ namespace TestApp;
 
 class Program
 {
-    static BTree<int> currentTree = new BTree<int>(3); // Default to BTree
+    static BTree<int> currentTree = new BTree<int>(1); // Default to BTree
     static int currentStructure = 1; // 1 - BTree, 2 - BPlusTree, 3 - BStarTree
 
     static void Main(string[] args)
@@ -19,7 +19,8 @@ class Program
             Console.WriteLine("3. Insert element");
             Console.WriteLine("4. Delete element");
             Console.WriteLine("5. Search element");
-            Console.WriteLine("6. Exit");
+            Console.WriteLine("6. Visualize current tree");
+            Console.WriteLine("7. Exit");
 
             Console.Write("Enter your choice: ");
             string choice = Console.ReadLine();
@@ -42,6 +43,9 @@ class Program
                     SearchElement();
                     break;
                 case "6":
+                    Visualize();
+                    break;
+                case "7":
                     return; // Exit the application
                 default:
                     Console.WriteLine("Invalid choice. Please try again.");
@@ -77,26 +81,7 @@ class Program
         string choice = Console.ReadLine() ?? "";
         currentStructure = int.Parse(choice);
 
-        SelectStructureHelper();
-    }
-    
-    static void SelectStructureHelper()
-    {
-        switch (currentStructure)
-        {
-            case 1:
-                currentTree = new BTree<int>(3);
-                break;
-            case 2:
-                currentTree = new BPlusTree<int>(3);
-                break;
-            case 3:
-                currentTree = new BStarTree<int>(3);
-                break;
-            default:
-                Console.WriteLine("Invalid choice.");
-                break;
-        }
+        currentTree = DataGenerator.Generate(currentStructure);
     }
 
     static void PrintTree()
@@ -106,7 +91,7 @@ class Program
 
     static void GenerateTree()
     {
-        SelectStructureHelper();
+        currentTree = DataGenerator.Generate(currentStructure);
         Console.Write("Enter number of elements to generate: ");
         int numElements = int.Parse(Console.ReadLine());
         Random random = new Random();
@@ -147,5 +132,10 @@ class Program
         {
             Console.WriteLine("Element not found.");
         }
+    }
+
+    static void Visualize() {
+        var vis = new TreeVisualizer<int>();
+        vis.DisplayTree(currentTree);
     }
 }

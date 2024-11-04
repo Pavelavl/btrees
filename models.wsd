@@ -1,0 +1,83 @@
+@startuml
+left to right direction
+title Functional Structure of B-Tree Application
+
+package "User Interface" {
+  class ConsoleMenu {
+    +displayMenu()
+    +getUserChoice()
+  }
+}
+
+package "Data Structures" {
+  class BTree {
+    +insert()
+    +delete()
+    +search()
+  }
+  
+  class BPlusTree {
+    +insert()
+    +delete()
+    +search()
+    +findLeafNode()
+    +redistributeKeys()
+  }
+  
+  class BStarTree {
+    +insert()
+    +delete()
+    +search()
+    +redistributeKeys()
+    +performThreeWaySplit()
+  }
+}
+
+package "Test Application" {
+  class TestApp {
+    +run()
+    +initializeTree()
+  }
+}
+
+package "Unit Tests" {
+  class UnitTests {
+    +testInsert()
+    +testDelete()
+    +testSearch()
+  }
+}
+
+package "Data Generation" {
+  class DataGenerator {
+    +generateRandomTree()
+  }
+}
+
+package "Visualization" {
+  class TreeVisualizer {
+    +displayTree()
+  }
+}
+
+ConsoleMenu --> BTree : interacts
+ConsoleMenu --> BPlusTree : interacts
+ConsoleMenu --> BStarTree : interacts
+
+TestApp --> BTree : tests
+TestApp --> BPlusTree : tests
+TestApp --> BStarTree : tests
+
+UnitTests --> BTree : tests
+UnitTests --> BPlusTree : tests
+UnitTests --> BStarTree : tests
+
+DataGenerator --> BTree : generates
+DataGenerator --> BPlusTree : generates
+DataGenerator --> BStarTree : generates
+
+TreeVisualizer --> BTree : visualizes
+TreeVisualizer --> BPlusTree : visualizes
+TreeVisualizer --> BStarTree : visualizes
+
+@enduml

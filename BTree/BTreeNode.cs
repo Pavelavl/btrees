@@ -38,18 +38,28 @@ public class BTreeNode<T> where T : IComparable<T>
         Parent = null;
     }
 
+    /// <summary>
+    /// Поиск ключа в узле B-дерева
+    /// Временная сложность: O(t * log_t N), где t - порядок дерева, N - количество элементов
+    /// </summary>
     public BTreeNode<T> Search(T key)
     {
         int i = 0;
+
+        // Проход по ключам в текущем узле, чтобы найти подходящую позицию или сам ключ
         while (i < Keys.Count && key.CompareTo(Keys[i]) > 0)
             i++;
 
+        // Если ключ найден в текущем узле, возвращаем текущий узел
         if (i < Keys.Count && key.CompareTo(Keys[i]) == 0)
             return this;
 
+        // Если текущий узел является листом и ключ не найден, возвращаем null
         if (IsLeaf)
             return null;
 
+        // Если ключ не найден и узел не является листом, рекурсивно ищем в соответствующем дочернем узле
+        // Переход к дочернему узлу по индексу i, чтобы продолжить поиск
         return Children[i].Search(key);
     }
 

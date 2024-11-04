@@ -5,12 +5,17 @@ namespace BTree;
 
 public class BStarTree<T> : BPlusTree<T> where T : IComparable<T>
 {
+    // Минимальное количество ключей в узле для B*-дерева составляет 2/3 от степени
     public override int MinKeys => (int)Math.Ceiling(Degree * 2.0 / 3.0);
     
     public BStarTree(int degree) : base(degree)
     {
     }
 
+    /// <summary>
+    /// Вставка нового ключа в B*-дерево
+    /// Временная сложность: O(log_t N), где t - порядок дерева, N - количество элементов
+    /// </summary>
     public override void Insert(T key)
     {
         if (Root == null)
@@ -20,20 +25,23 @@ public class BStarTree<T> : BPlusTree<T> where T : IComparable<T>
         }
         else
         {
-            // Find the leaf node where the key should be inserted
+            // Поиск листового узла, в который будет вставлен ключ
             BStarTreeNode<T> leafNode = (BStarTreeNode<T>)FindLeafNode(key);
-
             leafNode.Keys.Add(key);
 
-            // Handle splits if necessary after redistribution
+            // Если узел переполнен, обрабатываем переполнение через перераспределение или разделение
             if (leafNode.IsFull)
                 HandleNodeOverflow(leafNode);
         }
     }
 
+    /// <summary>
+    /// Обработка переполнения узла: перераспределение с соседями или 3-стороннее разделение
+    /// Временная сложность: O(log_t N) в худшем случае, если происходит многоразовое разделение
+    /// </summary>
     protected void HandleNodeOverflow(BStarTreeNode<T> node)
     {
-        // Try to redistribute with left or right sibling before splitting
+        // Пытаемся перераспределить ключи с соседними узлами
         BStarTreeNode<T>? leftSibling = node.GetLeftSibling();
         BStarTreeNode<T>? rightSibling = node.GetRightSibling();
 
@@ -49,10 +57,14 @@ public class BStarTree<T> : BPlusTree<T> where T : IComparable<T>
             return;
         }
 
-        // Perform 3-way split if redistribution fails
+        // Если перераспределение невозможно, выполняем 3-стороннее разделение
         PerformThreeWaySplit(node);
     }
 
+    /// <summary>
+    /// Перераспределение ключей между соседними узлами
+    /// Временная сложность: O(t), так как затрагивает только ключи в узлах
+    /// </summary>
     private void RedistributeKeys(BStarTreeNode<T> fromNode, BStarTreeNode<T> toNode)
     {
         int transferCount = Math.Min(Math.Min(toNode.Keys.Count - MinKeys, fromNode.Keys.Count),
@@ -64,7 +76,7 @@ public class BStarTree<T> : BPlusTree<T> where T : IComparable<T>
             fromNode.Keys.RemoveRange(fromNode.Keys.Count - transferCount, transferCount);
         }
 
-        // Update linked list pointers if leaf nodes
+        // Обновление указателей, если перераспределяем листовые узлы
         if (fromNode.IsLeaf && toNode.IsLeaf && fromNode.Children.Count > 0 && toNode.Children.Count > 0)
         {
             BStarTreeNode<T> lastChildOfFrom = (BStarTreeNode<T>)fromNode.Children.Last();
@@ -72,11 +84,16 @@ public class BStarTree<T> : BPlusTree<T> where T : IComparable<T>
         }
     }
 
+    /// <summary>
+    /// Трехстороннее разделение узла при переполнении
+    /// Временная сложность: O(log_t N) в худшем случае, если разделение распространяется вверх
+    /// </summary>
     private void PerformThreeWaySplit(BStarTreeNode<T> fullNode)
     {
         int numKeys = fullNode.Keys.Count;
         int midLeftKeys = numKeys / 2;
 
+        // Создаем левый, средний и правый узлы после разделения
         BStarTreeNode<T> leftNode = new BStarTreeNode<T>(Degree);
         leftNode.Keys.AddRange(fullNode.Keys.GetRange(0, midLeftKeys));
         BStarTreeNode<T> middleNode = new BStarTreeNode<T>(Degree);
@@ -85,14 +102,14 @@ public class BStarTree<T> : BPlusTree<T> where T : IComparable<T>
         int numKeysAfterMid = fullNode.Keys.Count - midLeftKeys - 1;
         rightNode.Keys.AddRange(fullNode.Keys.GetRange(midLeftKeys + 1, numKeysAfterMid));
 
-        // Redistribute children if not leaf nodes
+        // Перераспределяем дочерние узлы, если узел не является листом
         if (!fullNode.IsLeaf)
         {
             leftNode.Children.AddRange(fullNode.Children.GetRange(0, midLeftKeys + 1));
             middleNode.Children.Add(fullNode.Children[midLeftKeys + 1]);
             rightNode.Children.AddRange(fullNode.Children.GetRange(midLeftKeys + 2, numKeysAfterMid + 1));
 
-            // Update child parent pointers
+            // Обновляем ссылки на родителей у дочерних узлов
             foreach (BStarTreeNode<T> child in leftNode.Children)
             {
                 child.Parent = leftNode;
@@ -109,29 +126,27 @@ public class BStarTree<T> : BPlusTree<T> where T : IComparable<T>
             }
         }
 
-        // Handle linked list pointers for leaf nodes (if necessary)
+        // Обработка листовых указателей для связного списка узлов (если требуется)
         if (fullNode.IsLeaf && leftNode.Children.Count > 0 && rightNode.Children.Count > 0)
         {
             BStarTreeNode<T> lastChildOfLeft = (BStarTreeNode<T>)leftNode.Children.Last();
             lastChildOfLeft.Next = (BStarTreeNode<T>)rightNode.Children.First();
         }
 
+        // Если узел имеет родителя, добавляем узлы после разделения к родителю
         if (fullNode.Parent != null)
         {
             int parentIndex = fullNode.Parent.Children.IndexOf(fullNode);
             if (parentIndex == -1) return;
-            int parentKeyIndex = CalculateKeyIndex(fullNode.Parent.Keys, fullNode.Keys[midLeftKeys]); // Calculate key index
-            fullNode.Parent.Keys.Insert(parentKeyIndex, fullNode.Keys[midLeftKeys]); // Insert at calculated index
+            int parentKeyIndex = CalculateKeyIndex(fullNode.Parent.Keys, fullNode.Keys[midLeftKeys]);
+            fullNode.Parent.Keys.Insert(parentKeyIndex, fullNode.Keys[midLeftKeys]);
             fullNode.Parent.Children.RemoveAt(parentIndex);
-            List<BStarTreeNode<T>> splitChildren = new List<BStarTreeNode<T>>();
-            splitChildren.Add(leftNode);
-            splitChildren.Add(middleNode);
-            splitChildren.Add(rightNode);
-            fullNode.Parent.Children.InsertRange(parentIndex, splitChildren);
+            fullNode.Parent.Children.InsertRange(parentIndex, new List<BStarTreeNode<T>> { leftNode, middleNode, rightNode });
             leftNode.Parent = fullNode.Parent;
             middleNode.Parent = fullNode.Parent;
             rightNode.Parent = fullNode.Parent;
-            // Check for overflow in the parent node and propagate split if needed
+
+            // Если родительский узел переполнился, обрабатываем его переполнение
             if (fullNode.Parent.IsFull)
             {
                 PerformThreeWaySplit((BStarTreeNode<T>)fullNode.Parent);
@@ -139,20 +154,23 @@ public class BStarTree<T> : BPlusTree<T> where T : IComparable<T>
         }
         else
         {
-            Console.WriteLine("new root");
-            // If fullNode is the root, create a new root and set it as the parent of the split nodes
+            // Создаем новый корень, если разделяем корень
             BStarTreeNode<T> newRoot = new BStarTreeNode<T>(Degree, false);
-            newRoot.Keys.Add(fullNode.Keys[midLeftKeys]); // Middle key becomes the only key in the new root
+            newRoot.Keys.Add(fullNode.Keys[midLeftKeys]);
             newRoot.Children.Add(leftNode);
             newRoot.Children.Add(middleNode);
             newRoot.Children.Add(rightNode);
             leftNode.Parent = newRoot;
             middleNode.Parent = newRoot;
             rightNode.Parent = newRoot;
-            Root = newRoot; // Update the root of the tree
+            Root = newRoot;
         }
     }
 
+    /// <summary>
+    /// Вычисление индекса для вставки разделяющего ключа
+    /// Временная сложность: O(log t), бинарный поиск по ключам родительского узла
+    /// </summary>
     int CalculateKeyIndex(List<T> parentKeys, T middleKey)
     {
         int low = 0;
@@ -165,21 +183,25 @@ public class BStarTree<T> : BPlusTree<T> where T : IComparable<T>
 
             if (comparisonResult == 0)
             {
-                return mid; // Key already exists at this index
+                return mid; // Ключ уже существует
             }
             else if (comparisonResult < 0)
             {
-                low = mid + 1; // Middle key is greater than current key
+                low = mid + 1;
             }
             else
             {
-                high = mid - 1; // Middle key is less than current key
+                high = mid - 1;
             }
         }
 
-        return low; // Insert at the insertion point for the middle key
+        return low; // Возвращаем индекс для вставки
     }
-    
+
+    /// <summary>
+    /// Поиск ключа в B*-дереве
+    /// Временная сложность: O(log_t N), где t - порядок дерева, N - количество элементов
+    /// </summary>
     public override BStarTreeNode<T>? Search(T key)
     {
         if (Root == null)
@@ -190,22 +212,21 @@ public class BStarTree<T> : BPlusTree<T> where T : IComparable<T>
         {
             int index = current.Keys.BinarySearch(key);
             if (index >= 0)
-                return current; // Key found in current node
+                return current; // Ключ найден в текущем узле
 
-            // Key not found in current node, determine child to descend into
             index = -index - 1;
 
-            // Adjust index if key falls after last key in current node
+            // Определяем нужный дочерний узел
             if (index == current.Keys.Count && key.CompareTo(current.Keys[index - 1]) > 0)
                 index = current.Children.Count - 1;
 
             current = (BStarTreeNode<T>)current.Children[index];
         }
 
-        // Reached a leaf node, check if the key exists
+        // Проверяем наличие ключа в листовом узле
         if (current.Keys.Contains(key))
             return current;
 
-        return null; // Key not found in the tree
+        return null; // Ключ не найден
     }
 }

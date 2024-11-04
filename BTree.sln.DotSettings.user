@@ -1,0 +1,8 @@
+﻿<wpf:ResourceDictionary xml:space="preserve" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:s="clr-namespace:System;assembly=mscorlib" xmlns:ss="urn:shemas-jetbrains-com:settings-storage-xaml" xmlns:wpf="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=79841b10_002D7cb7_002D4468_002D82d5_002De144e2751a3a/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="Delete_LeafNode" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+  &lt;TestAncestor&gt;&#xD;
+    &lt;TestId&gt;NUnit3x::E7115B85-3FB1-468B-A2F2-B77F3CD85FB0::net6.0::UnitTests.BTreeTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;NUnit3x::E7115B85-3FB1-468B-A2F2-B77F3CD85FB0::net6.0::UnitTests.BPlusTreeTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;NUnit3x::E7115B85-3FB1-468B-A2F2-B77F3CD85FB0::net6.0::UnitTests.BStarTree&lt;/TestId&gt;&#xD;
+  &lt;/TestAncestor&gt;&#xD;
+&lt;/SessionState&gt;</s:String></wpf:ResourceDictionary>
