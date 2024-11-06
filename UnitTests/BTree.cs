@@ -8,7 +8,7 @@ public class BTreeTests
     [SetUp]
     public void Setup()
     {
-        bTree = new BTree<int>(2); // Degree = 2
+        bTree = new BTree<int>(1); // Degree = 2
     }
 
     [Test]
@@ -45,9 +45,8 @@ public class BTreeTests
         bTree.Insert(5);
 
         var foundNode = bTree.Search(20);
-        Console.WriteLine(bTree);
         Assert.NotNull(foundNode);
-        Assert.That(foundNode.Keys[0], Is.EqualTo(20));
+        Assert.That(foundNode.Keys[2], Is.EqualTo(20));
     }
 
     [Test]

@@ -38,28 +38,19 @@ public class BTreeNode<T> where T : IComparable<T>
         Parent = null;
     }
 
-    /// <summary>
-    /// Поиск ключа в узле B-дерева
-    /// Временная сложность: O(t * log_t N), где t - порядок дерева, N - количество элементов
-    /// </summary>
-    public BTreeNode<T> Search(T key)
+    public BTreeNode<T>? Search(T key)
     {
         int i = 0;
 
-        // Проход по ключам в текущем узле, чтобы найти подходящую позицию или сам ключ
         while (i < Keys.Count && key.CompareTo(Keys[i]) > 0)
             i++;
 
-        // Если ключ найден в текущем узле, возвращаем текущий узел
         if (i < Keys.Count && key.CompareTo(Keys[i]) == 0)
             return this;
 
-        // Если текущий узел является листом и ключ не найден, возвращаем null
         if (IsLeaf)
             return null;
 
-        // Если ключ не найден и узел не является листом, рекурсивно ищем в соответствующем дочернем узле
-        // Переход к дочернему узлу по индексу i, чтобы продолжить поиск
         return Children[i].Search(key);
     }
 
@@ -69,14 +60,7 @@ public class BTreeNode<T> where T : IComparable<T>
         if (IsLeaf)
         {
             while (i >= 0 && Keys[i].CompareTo(key) > 0)
-            {
-                if (i + 1 < Keys.Count)
-                {
-                    Keys[i + 1] = Keys[i];
-                }
-
                 i--;
-            }
 
             Keys.Insert(i + 1, key);
         }
@@ -84,87 +68,16 @@ public class BTreeNode<T> where T : IComparable<T>
         {
             while (i >= 0 && Keys[i].CompareTo(key) > 0)
                 i--;
-            // Check for full node and no right sibling
-            if (i == -1 && IsFull && Children.Count == i + 2)
+
+            if (Children[i + 1].IsFull)
             {
-                // 1. Create a new right sibling node
-                var rightSibling = new BTreeNode<T>(Degree, false);
+                SplitChild(i + 1, Children[i + 1]);
 
-                // 2. Move half of the keys and children to the right sibling
-                int mid = Keys.Count / 2;
-                rightSibling.Keys.AddRange(Keys.GetRange(mid, Keys.Count - mid));
-                Keys.RemoveRange(mid, Keys.Count - mid);
-                rightSibling.Children.AddRange(Children.GetRange(mid + 1, Children.Count - (mid + 1)));
-                Children.RemoveRange(mid + 1, Children.Count - (mid + 1));
-
-                // 3. Promote the middle key (now the maximum) to become a separator key
-                // This promotion happens within the current node
-
-                // Shift remaining keys in the current node to make space
-                Keys.Insert(mid, Keys[mid - 1]);
-                Keys.RemoveAt(mid - 1);
-
-                // Move the last child of the current node to become the first child of the right sibling
-                rightSibling.Children.Insert(0, Children[mid]);
-                Children.RemoveAt(mid);
-
-                // 4. Add the right sibling to the parent node and adjust keys
-                // This step depends on your BTree structure and insertion logic
-                if (Parent != null) // Check if Parent exists
-                {
-                    int parentIndex = Parent.Children.IndexOf(this);
-                    Parent.Children.Insert(parentIndex + 1, rightSibling);
-                    Parent.Keys.Insert(parentIndex, Keys[mid - 1]);
-                    rightSibling.Parent = Parent; // Set Parent for rightSibling
-                }
+                if (Keys[i + 1].CompareTo(key) < 0)
+                    i++;
             }
-            else
-            {
-                if (i + 1 < Children.Count && Children[i + 1].IsFull)
-                {
-                    SplitChild(i + 1, Children[i + 1]);
-                    if (Keys[i + 1].CompareTo(key) < 0)
-                        i++;
-                }
 
-                if (i + 1 < Children.Count)
-                {
-                    Children[i + 1].InsertNonFull(key);
-                }
-                else
-                {
-                    // Handle the case when the child node is out of bounds (last node)
-                    // We can create a new right sibling and perform a split here 
-                    // since there's no existing sibling to the right.
-
-                    var newRightSibling = new BTreeNode<T>(Degree, false);
-                    int mid = Keys.Count / 2;
-
-                    // Move half of the keys and the last child to the new sibling
-                    newRightSibling.Keys.AddRange(Keys.GetRange(mid, Keys.Count - mid));
-                    Keys.RemoveRange(mid, Keys.Count - mid);
-                    newRightSibling.Children.Add(Children[mid]);
-                    Children.RemoveAt(mid);
-
-                    // Promote the middle key to become a separator key
-                    if (mid < Keys.Count)
-                    {
-                        Keys.Insert(mid, Keys[mid - 1]);
-                    }
-
-                    Keys.RemoveAt(mid - 1);
-
-                    // Insert the key into the appropriate child (either current or new sibling)
-                    if (mid < Keys.Count && key.CompareTo(Keys[mid - 1]) > 0)
-                    {
-                        newRightSibling.InsertNonFull(key);
-                    }
-                    else
-                    {
-                        Children[mid - 1].InsertNonFull(key);
-                    }
-                }
-            }
+            Children[i + 1].InsertNonFull(key);
         }
     }
 
@@ -172,30 +85,20 @@ public class BTreeNode<T> where T : IComparable<T>
     {
         var z = new BTreeNode<T>(y.Degree, y.IsLeaf);
 
-        // Use correct index for splitting keys
+        // Переносим правую часть ключей и дочерних узлов
         z.Keys.AddRange(y.Keys.GetRange(Degree, y.Keys.Count - Degree));
-
         if (!y.IsLeaf)
-        {
-            // Use correct count for splitting children
-            z.Children.AddRange(y.Children.GetRange(Degree + 1, y.Children.Count - Degree - 1));
-        }
+            z.Children.AddRange(y.Children.GetRange(Degree, y.Children.Count - Degree));
 
-        // Use correct index and count for removal
         y.Keys.RemoveRange(Degree, y.Keys.Count - Degree);
-
         if (!y.IsLeaf)
-        {
-            // Only remove children for non-leaf nodes
-            y.Children.RemoveRange(Degree + 1, y.Children.Count - Degree - 1);
-        }
+            y.Children.RemoveRange(Degree, y.Children.Count - Degree);
 
-        // Remainder of the code remains unchanged
         Children.Insert(i + 1, z);
         Keys.Insert(i, y.Keys[Degree - 1]);
         y.Keys.RemoveAt(Degree - 1);
 
-        z.Parent = this; // Set Parent for the new child node
+        z.Parent = this; // Устанавливаем ссылку на родителя для нового узла
     }
 
     public override string ToString()

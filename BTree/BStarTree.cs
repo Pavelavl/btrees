@@ -12,10 +12,6 @@ public class BStarTree<T> : BPlusTree<T> where T : IComparable<T>
     {
     }
 
-    /// <summary>
-    /// Вставка нового ключа в B*-дерево
-    /// Временная сложность: O(log_t N), где t - порядок дерева, N - количество элементов
-    /// </summary>
     public override void Insert(T key)
     {
         if (Root == null)
@@ -35,10 +31,6 @@ public class BStarTree<T> : BPlusTree<T> where T : IComparable<T>
         }
     }
 
-    /// <summary>
-    /// Обработка переполнения узла: перераспределение с соседями или 3-стороннее разделение
-    /// Временная сложность: O(log_t N) в худшем случае, если происходит многоразовое разделение
-    /// </summary>
     protected void HandleNodeOverflow(BStarTreeNode<T> node)
     {
         // Пытаемся перераспределить ключи с соседними узлами
@@ -61,10 +53,6 @@ public class BStarTree<T> : BPlusTree<T> where T : IComparable<T>
         PerformThreeWaySplit(node);
     }
 
-    /// <summary>
-    /// Перераспределение ключей между соседними узлами
-    /// Временная сложность: O(t), так как затрагивает только ключи в узлах
-    /// </summary>
     private void RedistributeKeys(BStarTreeNode<T> fromNode, BStarTreeNode<T> toNode)
     {
         int transferCount = Math.Min(Math.Min(toNode.Keys.Count - MinKeys, fromNode.Keys.Count),
@@ -84,10 +72,6 @@ public class BStarTree<T> : BPlusTree<T> where T : IComparable<T>
         }
     }
 
-    /// <summary>
-    /// Трехстороннее разделение узла при переполнении
-    /// Временная сложность: O(log_t N) в худшем случае, если разделение распространяется вверх
-    /// </summary>
     private void PerformThreeWaySplit(BStarTreeNode<T> fullNode)
     {
         int numKeys = fullNode.Keys.Count;
@@ -167,10 +151,6 @@ public class BStarTree<T> : BPlusTree<T> where T : IComparable<T>
         }
     }
 
-    /// <summary>
-    /// Вычисление индекса для вставки разделяющего ключа
-    /// Временная сложность: O(log t), бинарный поиск по ключам родительского узла
-    /// </summary>
     int CalculateKeyIndex(List<T> parentKeys, T middleKey)
     {
         int low = 0;
@@ -198,10 +178,6 @@ public class BStarTree<T> : BPlusTree<T> where T : IComparable<T>
         return low; // Возвращаем индекс для вставки
     }
 
-    /// <summary>
-    /// Поиск ключа в B*-дереве
-    /// Временная сложность: O(log_t N), где t - порядок дерева, N - количество элементов
-    /// </summary>
     public override BStarTreeNode<T>? Search(T key)
     {
         if (Root == null)

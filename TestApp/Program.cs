@@ -13,7 +13,6 @@ class Program
         while (true)
         {
             Console.WriteLine("\n\nSelected structure: " + GetStructureName(currentStructure));
-            Console.WriteLine($"Current tree: \n------------------\n {currentTree} \n------------------");
             Console.WriteLine("1. Select structure");
             Console.WriteLine("2. Generate tree");
             Console.WriteLine("3. Insert element");

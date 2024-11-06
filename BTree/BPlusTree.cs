@@ -6,10 +6,6 @@ public class BPlusTree<T> : BTree<T> where T : IComparable<T>
     {
     }
 
-    /// <summary>
-    /// Вставка нового ключа в B+-дерево
-    /// Временная сложность: O(log_t N), где t - порядок дерева, N - количество элементов
-    /// </summary>
     public override void Insert(T key)
     {
         if (Root == null)
@@ -32,10 +28,6 @@ public class BPlusTree<T> : BTree<T> where T : IComparable<T>
         }
     }
 
-    /// <summary>
-    /// Поиск листового узла для вставки ключа
-    /// Временная сложность: O(log_t N), где t - порядок дерева, так как происходит спуск по дереву
-    /// </summary>
     protected virtual BPlusTreeNode<T> FindLeafNode(BPlusTreeNode<T> node, T key)
     {
         if (node.IsLeaf)
@@ -63,19 +55,11 @@ public class BPlusTree<T> : BTree<T> where T : IComparable<T>
         }
     }
 
-    /// <summary>
-    /// Вспомогательный метод для поиска листового узла по ключу
-    /// Временная сложность: O(log_t N), поскольку используется рекурсивный спуск
-    /// </summary>
     protected virtual BPlusTreeNode<T> FindLeafNode(T key)
     {
         return FindLeafNode((BPlusTreeNode<T>)Root, key);
     }
 
-    /// <summary>
-    /// Обработка переполнения узла в B+-дереве (разделение узлов)
-    /// Временная сложность: O(log_t N) в худшем случае, если переполнение распространяется вверх по дереву
-    /// </summary>
     protected void HandleNodeOverflow(BPlusTreeNode<T> node)
     {
         // Разделяем переполненный узел
@@ -119,10 +103,6 @@ public class BPlusTree<T> : BTree<T> where T : IComparable<T>
         }
     }
 
-    /// <summary>
-    /// Обработка переполнения внутреннего узла
-    /// Временная сложность: O(log_t N), так как возможно повторное разделение на каждом уровне дерева
-    /// </summary>
     private void HandleInternalNodeOverflow(BPlusTreeNode<T> node)
     {
         // Разделяем переполненный внутренний узел
@@ -167,10 +147,6 @@ public class BPlusTree<T> : BTree<T> where T : IComparable<T>
         }
     }
     
-    /// <summary>
-    /// Удаление ключа из B+-дерева (упрощенная версия)
-    /// Временная сложность: O(log_t N), так как требуется найти ключ и удалить его
-    /// </summary>
     public override void Delete(T key)
     {
         if (Root == null)

@@ -14,10 +14,6 @@ public class BTree<T> where T : IComparable<T>
         Degree = degree;
     }
 
-    /// <summary>
-    /// Вставка нового ключа в B-дерево
-    /// Временная сложность: O(log_t N), где t - порядок дерева, N - количество элементов
-    /// </summary>
     public virtual void Insert(T key)
     {
         if (Root == null)
@@ -50,28 +46,20 @@ public class BTree<T> where T : IComparable<T>
         }
     }
 
-    /// <summary>
-    /// Поиск ключа в B-дереве
-    /// Временная сложность: O(t * log_t N), где t - порядок дерева, N - количество элементов
-    /// </summary>
-    public virtual BTreeNode<T> Search(T key)
+    public virtual BTreeNode<T>? Search(T key)
     {
         if (Root == null)
             return null;
         return Root.Search(key);
     }
 
-    /// <summary>
-    /// Удаление ключа из B-дерева (упрощенная версия)
-    /// Временная сложность: O(t * log_t N), так как происходит поиск ключа и удаление его из узла
-    /// </summary>
     public virtual void Delete(T key)
     {
         if (Root == null)
             return;
 
         // Поиск ключа и его удаление, если он находится в листовом узле
-        BTreeNode<T> node = Root.Search(key);
+        var node = Root.Search(key);
         if (node != null && node.IsLeaf && node.Keys.Contains(key))
         {
             node.Keys.Remove(key); // Удаление ключа из листового узла
